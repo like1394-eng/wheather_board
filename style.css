@@ -32,6 +32,7 @@ td[data-tip]:hover::before {
 .region .wname { color: #666; font-size: 14px; }
 .region .wnum { font-size: 13px; margin-top: 4px; }
 @media (max-width: 600px) { .regions { grid-template-columns: repeat(2, 1fr); } }
+.save { margin-top: 10px; }
 #dataMsg { color: #c62828; font-weight: bold; margin: 0 0 8px; }
 #dataMsg:empty { display: none; }
 #msgBox { color: #c62828; min-height: 1em; }
