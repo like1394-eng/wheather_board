@@ -1,7 +1,6 @@
 // app.js – 화면 동작 (목록 그리기, 일정 추가)
 
-// 기본 일정은 data/tasks.json 에서 읽고, 화면에서 추가한 일정만 브라우저(localStorage)에 저장
-let baseTasks = [];
+// 일정 목록은 Supabase 표 wx_tasks 에 있음 (표 만들기: setup.sql)
 let tasks = [];
 let weatherByRegion = {};   // 03 단원에서 지역별 날씨를 넣음
 
@@ -56,24 +55,26 @@ function renderRegionWeather() {
   }
 }
 
-function mergeTasks() {
-  const saved = JSON.parse(localStorage.getItem('wx_added') || '[]');
-  tasks = baseTasks.concat(saved);
+// Supabase 연결 (config.js 의 주소 · 공개용 키만 사용)
+let db = null;
+if (window.supabase && typeof SUPABASE_URL === 'string' && SUPABASE_URL.startsWith('https://')) {
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// JSON 을 먼저 읽고, 못 읽으면(더블클릭으로 연 경우 등) 안내 문구를 표시
+// wx_tasks 표에서 일정을 읽고, 못 읽으면 안내 문구를 표시
 async function loadTasks() {
   const msg = document.getElementById('dataMsg');
+  tasks = [];
   try {
-    const res = await fetch('data/tasks.json');
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    baseTasks = await res.json();
+    if (!db) throw new Error('config.js 에 Supabase 주소 · 키가 없습니다');
+    const { data, error } = await db.from('wx_tasks')
+      .select('title, region, kind, owner').order('id');
+    if (error) throw error;
+    tasks = data;
     msg.textContent = '';
   } catch (err) {
-    baseTasks = [];
-    msg.textContent = '배포 주소로 열어 주세요';
+    msg.textContent = '일정을 불러오지 못했습니다 (Supabase 연결을 확인해 주세요)';
   }
-  mergeTasks();
 }
 
 function weatherText(w) {
@@ -101,8 +102,10 @@ function renderTasks() {
   }
 }
 
-function addTask(e) {
+async function addTask(e) {
   e.preventDefault();
+  const form = e.target;
+  const msgBox = document.getElementById('msgBox');
   const t = {
     title: document.getElementById('titleInput').value.trim(),
     region: document.getElementById('regionInput').value,
@@ -110,12 +113,17 @@ function addTask(e) {
     owner: document.getElementById('ownerInput').value.trim(),
   };
   if (!t.title || !t.owner) return;
-  const saved = JSON.parse(localStorage.getItem('wx_added') || '[]');
-  saved.push(t);
-  localStorage.setItem('wx_added', JSON.stringify(saved));
-  e.target.reset();
-  mergeTasks();
-  renderTasks();
+  try {
+    if (!db) throw new Error('no db');
+    const { error } = await db.from('wx_tasks').insert(t);
+    if (error) throw error;
+    msgBox.textContent = '';
+    form.reset();
+    await loadTasks();
+    renderTasks();
+  } catch (err) {
+    msgBox.textContent = '일정을 저장하지 못했습니다. 입력값과 Supabase 연결을 확인해 주세요.';
+  }
 }
 
 // 제목 아래에 오늘 날짜(YYYY-MM-DD) 표시
