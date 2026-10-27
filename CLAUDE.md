@@ -13,6 +13,7 @@
 - style.css  : 디자인
 - logic.js   : 판단 규칙만 (화면을 다루는 코드 금지)
 - app.js     : 화면 동작 (목록 그리기, 일정 추가)
+- data/      : 데이터는 data/ 폴더 JSON에 둔다 (코드 안에 데이터를 직접 쓰지 않는다)
 - PRD.md · CLAUDE.md · README.md : 문서
 
 ## 작업 방식
