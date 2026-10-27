@@ -88,6 +88,7 @@ function renderTasks() {
     const td = document.createElement('td');
     td.textContent = r.text;
     td.className = r.level;
+    td.dataset.tip = r.reason;
     tr.appendChild(td);
     body.appendChild(tr);
   }

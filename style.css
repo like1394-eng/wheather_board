@@ -15,6 +15,16 @@ button { background: #4e8a36; color: #fff; border: 0; border-radius: 4px; cursor
 .stop { color: #c62828; font-weight: bold; }
 .none { color: #888; }
 #weatherBox { font-size: 14px; line-height: 1.6; }
+td[data-tip] { position: relative; cursor: help; }
+td[data-tip]:hover::after {
+  content: attr(data-tip); position: absolute; right: 0; bottom: 100%; margin-bottom: 6px; z-index: 10;
+  width: 240px; padding: 8px 10px; background: #333; color: #fff; border-radius: 6px;
+  font-size: 13px; font-weight: normal; line-height: 1.5; white-space: normal;
+}
+td[data-tip]:hover::before {
+  content: ''; position: absolute; right: 16px; bottom: 100%; margin-bottom: -2px; z-index: 10;
+  border: 6px solid transparent; border-top-color: #333;
+}
 .regions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .region { text-align: center; background: #f4f7f2; border: 1px solid #d5e3c9; border-radius: 8px; padding: 10px 6px; }
 .region .icon { font-size: 36px; line-height: 1.2; }

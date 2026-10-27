@@ -4,13 +4,24 @@
 const RULES = { wind: 10, rain: 60, heat: 33 };
 
 // 일정 구분과 날씨로 판단 (w가 없으면 '날씨 확인 전')
+// reason 은 마우스를 올렸을 때 보여 줄 판단 기준 설명
 function judge(kind, w) {
-  if (!w) return { level: 'none', text: '날씨 확인 전' };
-  if (kind === '실내') return { level: 'ok', text: '영향 없음' };
-  if (kind === '고소' && w.windMax >= RULES.wind) return { level: 'stop', text: '중지 검토 (강풍)' };
-  if (w.tempMax >= RULES.heat) return { level: 'warn', text: '폭염 휴식' };
-  if (w.rainProb >= RULES.rain) return { level: 'warn', text: '우천 주의' };
-  return { level: 'ok', text: '진행' };
+  if (!w) return { level: 'none', text: '날씨 확인 전', reason: '날씨를 아직 받지 못해 판단할 수 없음' };
+  if (kind === '실내') return { level: 'ok', text: '영향 없음', reason: 'R-01 · 실내 일정은 날씨와 관계없이 영향 없음' };
+  if (kind === '고소' && w.windMax >= RULES.wind) {
+    return { level: 'stop', text: '중지 검토 (강풍)',
+      reason: 'R-02 · 고소 일정이고 최대 풍속이 ' + RULES.wind + 'm/s 이상이면 중지 검토 (현재 ' + w.windMax + 'm/s)' };
+  }
+  if (w.tempMax >= RULES.heat) {
+    return { level: 'warn', text: '폭염 휴식',
+      reason: 'R-03 · 최고 기온이 ' + RULES.heat + '℃ 이상이면 폭염 휴식 (현재 ' + w.tempMax + '℃)' };
+  }
+  if (w.rainProb >= RULES.rain) {
+    return { level: 'warn', text: '우천 주의',
+      reason: 'R-04 · 강수확률이 ' + RULES.rain + '% 이상이면 우천 주의 (현재 ' + w.rainProb + '%)' };
+  }
+  return { level: 'ok', text: '진행',
+    reason: 'R-05 · 위 기준에 걸리지 않아 진행 (현재 풍속 ' + w.windMax + 'm/s · 기온 ' + w.tempMax + '℃ · 강수 ' + w.rainProb + '%)' };
 }
 
 // Open-Meteo 요청 주소 만들기 (regions: { 이름: { lat, lon } })
