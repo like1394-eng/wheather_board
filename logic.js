@@ -19,7 +19,7 @@ function buildWeatherUrl(regions) {
   return 'https://api.open-meteo.com/v1/forecast'
     + '?latitude=' + names.map(n => regions[n].lat).join(',')
     + '&longitude=' + names.map(n => regions[n].lon).join(',')
-    + '&daily=temperature_2m_max,wind_speed_10m_max,precipitation_probability_max'
+    + '&daily=temperature_2m_max,wind_speed_10m_max,precipitation_probability_max,weather_code'
     + '&wind_speed_unit=ms&timezone=Asia/Seoul&forecast_days=1';
 }
 
@@ -32,9 +32,21 @@ function parseWeather(data, names, testWind) {
       tempMax: Math.round(d.temperature_2m_max[0]),
       windMax: testWind ? 12 : Math.round(d.wind_speed_10m_max[0] * 10) / 10,
       rainProb: d.precipitation_probability_max[0],
+      code: d.weather_code[0],
     };
   });
   return result;
 }
 
-if (typeof module !== 'undefined') module.exports = { RULES, judge, buildWeatherUrl, parseWeather };
+// 날씨 코드(WMO)를 아이콘과 이름으로 바꿈
+function weatherIcon(code) {
+  if (code === 0) return { icon: '☀️', name: '맑음' };
+  if (code >= 1 && code <= 3) return { icon: '⛅', name: '구름' };
+  if (code === 45 || code === 48) return { icon: '🌫️', name: '안개' };
+  if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return { icon: '🌧️', name: '비' };
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return { icon: '❄️', name: '눈' };
+  if (code >= 95 && code <= 99) return { icon: '⛈️', name: '뇌우' };
+  return { icon: '❓', name: '알 수 없음' };
+}
+
+if (typeof module !== 'undefined') module.exports = { RULES, judge, buildWeatherUrl, parseWeather, weatherIcon };

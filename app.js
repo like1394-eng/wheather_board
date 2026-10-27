@@ -37,6 +37,31 @@ async function loadWeather() {
     box.textContent = '날씨를 받지 못했습니다. 판단은 "날씨 확인 전"으로 표시됩니다.';
   }
   renderTasks();
+  renderRegionWeather();
+}
+
+// 지역별 날씨 카드 (아이콘 · 지역 · 날씨 이름 · 수치)
+function renderRegionWeather() {
+  const box = document.getElementById('regionWeather');
+  box.innerHTML = '';
+  const names = Object.keys(REGIONS);
+  if (!names.some(n => weatherByRegion[n])) {
+    box.textContent = '날씨를 받지 못했습니다.';
+    return;
+  }
+  for (const n of names) {
+    const w = weatherByRegion[n];
+    const ic = weatherIcon(w.code);
+    const item = document.createElement('div');
+    item.className = 'region';
+    for (const [cls, text] of [['icon', ic.icon], ['rname', n], ['wname', ic.name], ['wnum', weatherText(w)]]) {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      item.appendChild(el);
+    }
+    box.appendChild(item);
+  }
 }
 
 function loadTasks() {
