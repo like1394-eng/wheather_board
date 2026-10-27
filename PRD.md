@@ -18,6 +18,7 @@
 | F-08 | 판단 칸에 마우스를 올리면 판단 기준(R-번호 · 현재 값)을 풍선으로 설명 | 03 API |
 | F-05 | 일정 목록을 data/tasks.json 으로 분리, 오늘 판단을 md 파일로 저장 | 04 데이터 형식 |
 | F-06 | 일정 목록을 Supabase 표(wx_tasks)에 저장해 여러 사람이 같이 봄 | 04 DB |
+| F-09 | `/api/kma?region=대전` 으로 그 지역의 일정 · 날씨(기상청) · 판단을 JSON으로 받기 | 05 API |
 
 ## 4. 데이터 (가상)
 - 일정 칸 : 일정 이름(title) · 지역(region) · 구분(kind) · 담당(owner)
@@ -52,3 +53,26 @@
 - [ ] T-02 일정을 추가하면 목록 맨 아래에 바로 보이고, 새로고침해도 남는다
 - [ ] T-03 날씨 칸에 지역마다 다른 숫자가 보인다 (03 단원)
 - [ ] T-04 주소 끝에 ?test=wind 를 붙이면 고소 일정 2건이 '중지 검토'로 바뀐다 (03 단원)
+- [ ] T-05 배포 주소 뒤에 `/api/kma?region=대전` 을 붙여 열면 일정 · 날씨 · 판단이 JSON으로 나온다
+- [ ] T-06 `/api/kma?region=서울` 처럼 없는 지역은 400 오류, `region` 이 없어도 400 오류가 나온다
+
+## 8. API 명세 (F-09)
+- 주소 : `GET /api/kma?region=세종|대전|태안|보령` (Vercel 서버 함수 `api/kma.js`)
+- 날씨 : 기상청 단기예보(getVilageFcst). 오늘 하루의 최고 기온(TMX) · 최대 풍속(WSD) · 최대 강수확률(POP)
+- 일정 : Supabase 표 wx_tasks 에서 그 지역 일정만 읽음 (읽기만)
+- 판단 : 화면과 같은 규칙(logic.js 의 judge, R-01~R-05)
+- 환경변수 (Vercel) : `KMA_KEY` (기상청 인증키), `SUPABASE_URL`, `SUPABASE_ANON_KEY` (공개용 키). 키는 응답에 나오지 않음
+
+응답 예
+```json
+{
+  "region": "대전", "date": "2026-10-27",
+  "weather": { "tempMax": 16, "windMax": 6.8, "rainProb": 0, "sky": "맑음" },
+  "tasks": [
+    { "title": "하천 수위계 확인", "kind": "야외", "owner": "최현장",
+      "judgment": { "level": "ok", "text": "진행", "reason": "R-05 · ..." } }
+  ]
+}
+```
+- 지역이 4곳이 아니면 400, 일정을 못 읽으면 502
+- 날씨를 못 받으면 `weather` 는 `null`, 판단은 '날씨 확인 전' (일정은 그대로 나옴)
