@@ -13,4 +13,28 @@ function judge(kind, w) {
   return { level: 'ok', text: '진행' };
 }
 
-if (typeof module !== 'undefined') module.exports = { RULES, judge };
+// Open-Meteo 요청 주소 만들기 (regions: { 이름: { lat, lon } })
+function buildWeatherUrl(regions) {
+  const names = Object.keys(regions);
+  return 'https://api.open-meteo.com/v1/forecast'
+    + '?latitude=' + names.map(n => regions[n].lat).join(',')
+    + '&longitude=' + names.map(n => regions[n].lon).join(',')
+    + '&daily=temperature_2m_max,wind_speed_10m_max,precipitation_probability_max'
+    + '&wind_speed_unit=ms&timezone=Asia/Seoul&forecast_days=1';
+}
+
+// 응답을 { 지역: { tempMax, windMax, rainProb } } 로 해석 (testWind 이면 풍속을 12로 바꿈)
+function parseWeather(data, names, testWind) {
+  const result = {};
+  names.forEach((n, i) => {
+    const d = data[i].daily;
+    result[n] = {
+      tempMax: Math.round(d.temperature_2m_max[0]),
+      windMax: testWind ? 12 : Math.round(d.wind_speed_10m_max[0] * 10) / 10,
+      rainProb: d.precipitation_probability_max[0],
+    };
+  });
+  return result;
+}
+
+if (typeof module !== 'undefined') module.exports = { RULES, judge, buildWeatherUrl, parseWeather };

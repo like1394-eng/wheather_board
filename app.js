@@ -26,26 +26,10 @@ async function loadWeather() {
   const names = Object.keys(REGIONS);
   const box = document.getElementById('weatherBox');
   try {
-    if (new URLSearchParams(location.search).get('test') === 'wind') {
-      for (const n of names) weatherByRegion[n] = { tempMax: 25, windMax: 12, rainProb: 10 };
-    } else {
-      const url = 'https://api.open-meteo.com/v1/forecast'
-        + '?latitude=' + names.map(n => REGIONS[n].lat).join(',')
-        + '&longitude=' + names.map(n => REGIONS[n].lon).join(',')
-        + '&daily=temperature_2m_max,wind_speed_10m_max,precipitation_probability_max'
-        + '&wind_speed_unit=ms&timezone=Asia/Seoul&forecast_days=1';
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      names.forEach((n, i) => {
-        const d = data[i].daily;
-        weatherByRegion[n] = {
-          tempMax: Math.round(d.temperature_2m_max[0]),
-          windMax: Math.round(d.wind_speed_10m_max[0] * 10) / 10,
-          rainProb: d.precipitation_probability_max[0],
-        };
-      });
-    }
+    const testWind = new URLSearchParams(location.search).get('test') === 'wind';
+    const res = await fetch(buildWeatherUrl(REGIONS));
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    weatherByRegion = parseWeather(await res.json(), names, testWind);
     box.textContent = '오늘 날씨 (최고 기온 · 최대 풍속 · 강수확률) : '
       + names.map(n => n + ' ' + weatherText(weatherByRegion[n])).join(' / ');
   } catch (err) {
